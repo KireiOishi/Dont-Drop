@@ -5,10 +5,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $student_name = $_POST['student_name'];
     $email = $_POST['email'];
     $course_id = $_POST['course_id'];
+    $section_name = $_POST['section_name']; // Add section_name input
 
-    $stmt = $con->prepare("INSERT INTO students (student_name, email, course_id) VALUES (?, ?, ?)");
-    $stmt->bind_param("ssi", $student_name, $email, $course_id);
+    // Insert the section first to get its ID
+    $stmt = $con->prepare("INSERT INTO sections (section_name) VALUES (?)");
+    $stmt->bind_param("s", $section_name);
+    $stmt->execute();
+    $section_id = $stmt->insert_id; // Get the ID of the inserted section
+    $stmt->close();
 
+    // Insert the student with the obtained section_id
+    $stmt = $con->prepare("INSERT INTO students (student_name, email, course_id, section_id) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssii", $student_name, $email, $course_id, $section_id);
+    
     if ($stmt->execute()) {
         header('Location: students.php');
     } else {
@@ -20,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $courses = $con->query("SELECT * FROM courses");
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -104,7 +114,7 @@ select:focus {
 
     <h2>Add Student</h2>
     <form method="POST" action="">
-        <label>Student FullName:</label><br>
+        <label>Student Full Name:</label><br>
         <input type="text" name="student_name" placeholder="Fullname" required><br>
         <label>Email:</label><br>
         <input type="email" name="email" required><br>
@@ -114,6 +124,8 @@ select:focus {
                 <option value="<?= $row['id'] ?>"><?= $row['course_name'] ?></option>
             <?php endwhile; ?>
         </select><br>
+        <label>Section Name:</label><br> <!-- New input field for section name -->
+        <input type="text" name="section_name" required><br>
         <button type="submit">Add Student</button>
     </form>
 </body>

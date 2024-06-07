@@ -330,47 +330,57 @@ header {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                // PHP code to retrieve and display most at risk students
-                // Connect to the database
-                $con = mysqli_connect("localhost", "root", "", "jayyr", 3306);
-                  if (!$con) {
-        die("Could not connect: " . mysqli_connect_error());
-    }
-   
-    // Query to fetch most at risk students from the database
-    $query = "SELECT * FROM students";
-    $result = mysqli_query($con, $query);
-                if (mysqli_num_rows($result) > 0) {
-                    // Output data of each row
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        // Calculate risk index here or retrieve it from where it's calculated
-                        $risk_index = 0.75; // Example risk index
-                        $risk_color = $risk_index > 0.7 ? 'red' : ($risk_index > 0.4 ? 'orange' : 'green');
-            
-                        echo "<tr>";
-                        echo "<td>" . $row["student_name"] . "</td>";
-                        echo "<td>
-                        <div class='risk-index' style='background-color: $risk_color;'>
-                            Risk Index: " . round($risk_index * 100) . "%
-                        </div>
-                      </td>";
-                        echo "<td>" . $row["email"] . "</td>";
-                       
-                        echo "<td>
-                                <form method='POST' action='send_notification.php'>
-                                    <input type='hidden' name='email' value='" . $row["email"] . "' />
-                                    <button type='submit' name='sendEmail'>Send Alert</button>
-                                </form>
-                              </td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='4'>No students found</td></tr>";
-                }
+            <?php
+// PHP code to retrieve and display student records with risk index
+// Connect to the database
+$con = mysqli_connect("localhost", "root", "", "jayyr", 3306);
+if (!$con) {
+    die("Could not connect: " . mysqli_connect_error());
+}
 
-                mysqli_close($con);
-                ?>
+// Query to fetch student records and calculate risk index
+$query = "SELECT students.*, COUNT(student_activities.id) AS total_activities, 
+            SUM(CASE WHEN student_activities.activity_type = 'attendance' AND student_activities.score = 0 THEN 1 ELSE 0 END) AS absences, 
+            SUM(CASE WHEN student_activities.score < 50 THEN 1 ELSE 0 END) AS low_scores
+          FROM students
+          LEFT JOIN student_activities ON students.id = student_activities.student_id
+          GROUP BY students.id";
+$result = mysqli_query($con, $query);
+
+if (mysqli_num_rows($result) > 0) {
+    // Output data of each row
+    while ($row = mysqli_fetch_assoc($result)) {
+        // Calculate risk index
+        $total_activities = $row['total_activities'];
+        $absences = $row['absences'];
+        $low_scores = $row['low_scores'];
+
+        $risk_index = $total_activities > 0 ? ($low_scores / $total_activities) * 0.7 + ($absences / 3) * 0.3 : 0;
+        $risk_color = $risk_index > 0.7 ? 'red' : ($risk_index > 0.4 ? 'orange' : 'green');
+
+        echo "<tr>";
+        echo "<td>" . $row["student_name"] . "</td>";
+        echo "<td>
+                <div class='risk-index' style='background-color: $risk_color;'>
+                    Risk Index: " . round($risk_index * 100) . "%
+                </div>
+              </td>";
+        echo "<td>" . $row["email"] . "</td>";
+        echo "<td>
+                <form method='POST' action='send_notification.php'>
+                    <input type='hidden' name='email' value='" . $row["email"] . "' />
+                    <button type='submit' name='sendEmail'>Send Alert</button>
+                </form>
+              </td>";
+        echo "</tr>";
+    }
+} else {
+    echo "<tr><td colspan='4'>No students found</td></tr>";
+}
+
+mysqli_close($con);
+?>
+
             </tbody>
         </table>
     </div>

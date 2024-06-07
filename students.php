@@ -10,17 +10,39 @@ while ($row = $coursesResult->fetch_assoc()) {
     $courses[] = $row['course_name'];
 }
 
+// Retrieve unique sections from the database
+$sectionsResult = $con->query("SELECT DISTINCT section_name FROM sections");
+
+// Fetch section names into an array
+$sections = [];
+while ($row = $sectionsResult->fetch_assoc()) {
+    $sections[] = $row['section_name'];
+}
+
 // Initialize variables
 $selectedCourse = isset($_GET['course']) ? $_GET['course'] : '';
+$selectedSection = isset($_GET['section']) ? $_GET['section'] : '';
 $sortField = isset($_GET['sortField']) ? $_GET['sortField'] : 'student_name';
 $sortOrder = isset($_GET['sortOrder']) ? $_GET['sortOrder'] : 'ASC';
 
 // Base query
-$query = "SELECT students.*, courses.course_name FROM students LEFT JOIN courses ON students.course_id = courses.id";
+$query = "SELECT students.*, courses.course_name, sections.section_name 
+          FROM students 
+          LEFT JOIN courses ON students.course_id = courses.id 
+          LEFT JOIN sections ON students.section_id = sections.id";
 
 // Apply course filter if selected
 if (!empty($selectedCourse)) {
     $query .= " WHERE courses.course_name = '$selectedCourse'";
+}
+
+// Apply section filter if selected
+if (!empty($selectedSection)) {
+    if (strpos($query, 'WHERE') !== false) {
+        $query .= " AND sections.section_name = '$selectedSection'";
+    } else {
+        $query .= " WHERE sections.section_name = '$selectedSection'";
+    }
 }
 
 // Apply sorting
@@ -29,6 +51,7 @@ $query .= " ORDER BY students.$sortField $sortOrder";
 // Execute query
 $result = $con->query($query);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -264,6 +287,15 @@ $result = $con->query($query);
                     <option value="<?php echo urlencode($course); ?>" <?php if ($selectedCourse == $course) echo 'selected'; ?>><?php echo $course; ?></option>
                 <?php endforeach; ?>
             </select>
+
+            <label for="section">Filter by Section:</label>
+        <select name="section" id="section" onchange="this.form.submit()">
+            <option value="">All Sections</option>
+            <?php foreach ($sections as $section): ?>
+                <option value="<?php echo urlencode($section); ?>" <?php if ($selectedSection == $section) echo 'selected'; ?>><?php echo $section; ?></option>
+            <?php endforeach; ?>
+        </select>
+        
             
             <label for="sortField">Sort by:</label>
             <select name="sortField" id="sortField" onchange="this.form.submit()">
@@ -288,6 +320,7 @@ $result = $con->query($query);
                     <th>Student Name</th>
                     <th>Email</th>
                     <th>Course</th>
+                    <th>Section</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -298,6 +331,7 @@ $result = $con->query($query);
                     <td><?= $row['student_name'] ?></td>
                     <td><?= $row['email'] ?></td>
                     <td><?= $row['course_name'] ?></td>
+                    <td><?= $row['section_name'] ?></td>
                     <td class="actions">
                         <a href="edit_student.php?id=<?= $row['id'] ?>">Edit</a>
                         <a href="delete_student.php?id=<?= $row['id'] ?>" class="delete" onclick="return confirm('Are you sure?')">Delete</a>

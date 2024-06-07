@@ -3,7 +3,11 @@ include 'db.php';
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
-    $result = $con->query("SELECT * FROM students WHERE id = $id");
+    $result = $con->query("SELECT students.*, courses.course_name, sections.section_name 
+                           FROM students 
+                           LEFT JOIN courses ON students.course_id = courses.id 
+                           LEFT JOIN sections ON students.section_id = sections.id 
+                           WHERE students.id = $id");
     $student = $result->fetch_assoc();
 }
 
@@ -11,13 +15,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = $_POST['id'];
     $student_name = $_POST['student_name'];
     $email = $_POST['email'];
+    $section_name = $_POST['section_name']; // Ensure this line is correct
+    
     $course_id = $_POST['course_id'];
+    
+    // Assuming sections are not directly stored in students, we need to fetch the section id first
+    $sectionQuery = $con->query("SELECT id FROM sections WHERE section_name = '$section_name'");
+    $section = $sectionQuery->fetch_assoc();
+    $section_id = $section['id'];
 
-    $stmt = $con->prepare("UPDATE students SET student_name = ?, email = ?, course_id = ? WHERE id = ?");
-    $stmt->bind_param("ssii", $student_name, $email, $course_id, $id);
-
+    $stmt = $con->prepare("UPDATE students SET student_name = ?, email = ?, section_id = ?, course_id = ? WHERE id = ?");
+    $stmt->bind_param("sssii", $student_name, $email, $section_id, $course_id, $id);
+    
     if ($stmt->execute()) {
         header('Location: students.php');
+        exit;
     } else {
         echo "Error: " . $stmt->error;
     }
@@ -115,6 +127,8 @@ select:focus {
         <input type="text" name="student_name" value="<?= $student['student_name'] ?>" required><br>
         <label>Email:</label><br>
         <input type="email" name="email" value="<?= $student['email'] ?>" required><br>
+        <label>Section Name:</label><br>
+        <input type="text" name="section_name" value="<?= $student['section_name'] ?>" required><br>
         <label>Course:</label><br>
         <select name="course_id" required>
             <?php while($row = $courses->fetch_assoc()): ?>
