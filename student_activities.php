@@ -143,7 +143,7 @@ $absences = 0;
 
 while ($row = $result->fetch_assoc()) {
     $total_activities++;
-    if ($row['activity_type'] == 'attendance' && $row['score'] == 0) {
+    if ($row['activity_type'] == 'attendance' && $row['score'] == 1) {
         $absences++;
     } elseif ($row['score'] < $low_score_threshold) {
         $low_scores++;

@@ -15,6 +15,8 @@ if (!isset($_SESSION['user_id'])) {
 // Retrieve user data based on the stored user ID
 $userId = $_SESSION['user_id'];
 
+
+
 // Perform a query to get user information from the database based on $userId
 $query = "SELECT * FROM `user` WHERE `user_id` = $userId";
 $result = mysqli_query($con, $query);
@@ -101,7 +103,7 @@ header {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            margin-left:-270px;
+            margin-left:-350px;
             background-color: #fff;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             border-radius: 5px;
@@ -267,6 +269,39 @@ header {
             color: green;
             margin: 20px;
         }
+       
+        .risk-index {
+        position: relative; /* Add position relative to parent */
+        width: 200px; /* Adjust the width as needed */
+        height: 20px; /* Adjust the height as needed */
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden; /* Ensure the child elements don't overflow */
+    }
+
+    .scale-bar {
+        height: 100%;
+        transition: width 0.5s ease; /* Add transition for smooth width change */
+    }
+
+    .activity-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px; /* Adjust the width of the indicator */
+        height: 100%;
+        background-color: green; /* Default color for activity indicator */
+    }
+
+    .risk-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff; /* Adjust text color as needed */
+    }
+
+
     </style>
    
 </head>
@@ -339,12 +374,15 @@ if (!$con) {
 }
 
 // Query to fetch student records and calculate risk index
+// Query to fetch student records and calculate risk index, ordered by risk index descending
 $query = "SELECT students.*, COUNT(student_activities.id) AS total_activities, 
             SUM(CASE WHEN student_activities.activity_type = 'attendance' AND student_activities.score = 0 THEN 1 ELSE 0 END) AS absences, 
             SUM(CASE WHEN student_activities.score < 50 THEN 1 ELSE 0 END) AS low_scores
           FROM students
           LEFT JOIN student_activities ON students.id = student_activities.student_id
-          GROUP BY students.id";
+          GROUP BY students.id
+          ORDER BY ((SUM(CASE WHEN student_activities.score < 50 THEN 1 ELSE 0 END) / COUNT(student_activities.id)) * 0.7 + (SUM(CASE WHEN student_activities.activity_type = 'attendance' AND student_activities.score = 0 THEN 1 ELSE 0 END) / 3) * 0.3) DESC";
+
 $result = mysqli_query($con, $query);
 
 if (mysqli_num_rows($result) > 0) {
@@ -359,7 +397,9 @@ if (mysqli_num_rows($result) > 0) {
         $risk_color = $risk_index > 0.7 ? 'red' : ($risk_index > 0.4 ? 'orange' : 'green');
 
         echo "<tr>";
-        echo "<td>" . $row["student_name"] . "</td>";
+       // Output student name as a clickable link without underline
+echo "<td><a href='student_activities.php?student_id=" . $row['id'] . "' style='text-decoration: none;'>" . $row["student_name"] . "</a></td>";
+
         echo "<td>
                 <div class='risk-index' style='background-color: $risk_color;'>
                     Risk Index: " . round($risk_index * 100) . "%
