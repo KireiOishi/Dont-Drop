@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    
+	<style>
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #000; /* Set black background */
+}
+
+/* Login container */
+.login-container {
+    width: 40%;
+    margin: 100px auto;
+    padding: 30px;
+    background-color: #000;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    color: #fff;
+}
+
+.login-container img.logo {
+    display: block;
+    margin: 0 auto 20px;
+    width: 150px; /* Adjust size as needed */
+    height: auto;
+}
+
+.login-container h2 {
+    margin-bottom: 10px;
+}
+
+.login-container p {
+    margin-bottom: 20px;
+}
+
+.login-container label {
+    display: block;
+    text-align: left;
+}
+
+.login-container input[type="email"],
+.login-container input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #666;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+}
+
+.login-container .btn-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.login-container .btn-container button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #046c2d;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-container .btn-container button:hover {
+    background-color: #044a1c;
+}
+
+.login-container a {
+    display: block;
+    flex: 1;
+    margin-top: 10px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.login-container a:hover {
+    text-decoration: underline;
+}
+
+        /* Light mode styling */
+        body.light-mode {
+            background-color: #f0f0f0;
+            color: #000;
+        }
+
+        .login-container.light-mode {
+            background-color: #fff;
+            color: #000;
+        }
+
+        .login-container.light-mode input[type="email"],
+        .login-container.light-mode input[type="password"] {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #ccc;
+        }
+
+        .login-container.light-mode a {
+            color: #000;
+        }
+
+        .login-container.light-mode .btn-container button {
+            background-color: #046c2d;
+            color: #fff;
+        }
+
+        .login-container.light-mode .btn-container button:hover {
+            background-color: #044a1c;
+        }
+
+	  /* Toggle switch styling */
+      .switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .slider::before {
+            content: "Light";
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #000;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .slider::after {
+            content: "Dark";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .slider .toggle {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider .toggle:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider .toggle {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider .toggle:before {
+            transform: translateX(26px);
+        }
+	</style>
+</head>
+<body class="dark-mode">
+    <div class="switch">
+        <label class="slider">
+            <input type="checkbox" id="modeToggle">
+            <div class="toggle"></div>
+        </label>
+    </div>
+    <div class="login-container">
+        <img class="logo" src="images/dont.png" alt="Logo">
+        <h2>Login</h2>
+        <p>Sign in to continue</p>
+        <form action="login.php" method="post">
+            <label for="email">Email:</label>
+            <input type="email" name="email" placeholder="Email" required>
+    
+            <label for="password">Password:</label>
+            <input type="password" name="password" placeholder="Password" required>
+    
+            <div class="btn-container">
+                <button type="submit">LOG IN</button>
+               <a href="signup.html">SIGN UP</a> 
+            </div>
+            <br>
+            
+            <a href="forgot_password.html">Forgot Password?</a>
+        </form>
+    </div>
+    
+    <script>
+        // Function to toggle between light and dark mode
+        function toggleMode() {
+            const body = document.body;
+            const loginContainer = document.querySelector('.login-container');
+            const isDarkMode = body.classList.contains('dark-mode');
+            body.classList.toggle('dark-mode', !isDarkMode);
+            body.classList.toggle('light-mode', isDarkMode);
+            loginContainer.classList.toggle('dark-mode', !isDarkMode);
+            loginContainer.classList.toggle('light-mode', isDarkMode);
+            localStorage.setItem('mode', isDarkMode ? 'light' : 'dark');
+        }
+
+        // Check local storage for mode preference
+        document.addEventListener('DOMContentLoaded', () => {
+            const mode = localStorage.getItem('mode') || 'dark';
+            const modeToggle = document.getElementById('modeToggle');
+            if (mode === 'light') {
+                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
+                document.querySelector('.login-container').classList.remove('dark-mode');
+                document.querySelector('.login-container').classList.add('light-mode');
+                modeToggle.checked = true;
+            }
+            modeToggle.addEventListener('change', toggleMode);
+        });
+    </script>
+             
+        
+</body>
+</html>
